@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Prettify | Advanced HTML Viewer</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JS-Beautify for Code Formatting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-html.min.js"></script>
+    <style>
+        /* Global Styles & Variables */
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --accent: #ff6b6b;
+            --dark: #1d1e2c;
+            --darker: #12131f;
+            --light: #f8f9fa;
+            --success: #06d6a0;
+            --warning: #ffd166;
+            --editor-bg: #2d2d3a;
+            --preview-bg: #f8f9fa;
+            --border: #3a3a4a;
+            --ad-bg: #f1f3f9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* Logo and Header */
+        .logo-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .logo-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--accent), var(--warning));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+
+        /* Main App Container */
+        .app-container {
+            display: flex;
+            gap: 25px;
+            height: 65vh;
+            margin-bottom: 30px;
+        }
+
+        .editor-container, .preview-container {
+            flex: 1;
+            background: var(--editor-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 1.4rem;
+        }
+
+        .panel-header h2 i {
+            color: var(--accent);
+            background: rgba(255, 107, 107, 0.15);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .panel-controls {
+            display: flex;
+            gap: 12px;
+            padding: 15px 25px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #05c090; }
+        .btn-warning { background: var(--warning); color: var(--dark); }
+        .btn-warning:hover { background: #ffc44d; }
+        .btn-accent { background: var(--accent); }
+        .btn-accent:hover { background: #ff5252; }
+
+        #htmlEditor {
+            flex-grow: 1;
+            padding: 20px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 16px;
+            background: #1a1b26;
+            color: #e0e0f0;
+            border: none;
+            resize: none;
+            line-height: 1.6;
+            tab-size: 4;
+            outline: none;
+        }
+
+        #previewFrame {
+            flex: 1;
+            background: var(--preview-bg);
+            border: none;
+        }
+
+        .status-bar {
+            padding: 12px 25px;
+            background: rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            color: #a0a0c0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Ad Container */
+        .ad-container {
+            background: var(--ad-bg);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin: 25px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 1px dashed #ccc;
+        }
+
+        .ad-container h3 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .ad-placeholder {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            color: #777;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            min-height: 120px;
+        }
+        
+        /* Features Section */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .feature-card h3 {
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+        
+        .feature-card p {
+            color: #b0b0d0;
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a0a0c0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .app-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .editor-container, .preview-container {
+                height: 50vh;
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .btn span { display: none; }
+            .btn { min-width: 60px; }
+            .logo-text { font-size: 2rem; }
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        .btn-animate {
+            animation: pulse 0.3s ease-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo Header -->
+        <div class="logo-header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-code"></i></div>
+                <h1 class="logo-text">HTML PRETTIFY</h1>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div class="app-container">
+            <!-- Editor Panel -->
+            <div class="editor-container">
+                <div class="panel-header">
+                    <h2><i class="fas fa-edit"></i> HTML Editor</h2>
+                </div>
+                <textarea id="htmlEditor" spellcheck="false" placeholder="<!-- Paste your HTML code here -->"></textarea>
+                <div class="panel-controls">
+                    <button class="btn btn-success" id="runBtn" title="Run (Ctrl+Enter)"><i class="fas fa-play"></i> <span>Run</span></button>
+                    <button class="btn btn-warning" id="formatBtn" title="Format Code (Ctrl+Shift+F)"><i class="fas fa-magic"></i> <span>Prettify</span></button>
+                    <button class="btn btn-accent" id="clearBtn" title="Clear Editor"><i class="fas fa-broom"></i> <span>Clear</span></button>
+                    <button class="btn" id="exampleBtn" title="Load Example Code"><i class="fas fa-file-code"></i> <span>Example</span></button>
+                </div>
+                <div class="status-bar">
+                    <div>Lines: <span id="lineCount">1</span></div>
+                    <div>UTF-8</div>
+                    <div>HTML</div>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="preview-container">
+                <div class="panel-header">
+                    <h2><i class="fas fa-eye"></i> Live Preview</h2>
+                </div>
+                <iframe id="previewFrame" title="HTML Preview" sandbox="allow-scripts allow-same-origin"></iframe>
+                <div class="panel-controls">
+                    <button class="btn" id="minifyBtn" title="Minify HTML"><i class="fas fa-compress-arrows-alt"></i> <span>Minify</span></button>
+                    <button class="btn" id="fullscreenBtn" title="Toggle Fullscreen"><i class="fas fa-expand"></i> <span>Fullscreen</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ad Space -->
+        <div class="ad-container">
+            <h3>Advertisement</h3>
+            <div class="ad-placeholder">
+                <i class="fas fa-ad" style="color: var(--primary);"></i>
+                <span>Your Google AdSense Space (e.g., 728x90 or Responsive)</span>
+                 <!-- 
+                Your Google AdSense code goes here. Example:
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-your-id" crossorigin="anonymous"></script>
+                <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-your-id" data-ad-slot="your-slot-id" data-ad-format="auto" data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+                 -->
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="features">
+            <div class="feature-card">
+                <h3><i class="fas fa-bolt" style="color: var(--warning);"></i> Real-time Rendering</h3>
+                <p>See your HTML rendered instantly. Changes appear immediately in the preview panel as you type, providing instant feedback.</p>
+            </div>
+            <div class="feature-card">
+                <h3><i class="fas fa-magic" style="color: var(--success);"></i> Code Beautifier</h3>
+                <p>Format messy HTML with a single click. Our advanced formatter (powered by JS-Beautify) indents your code for maximum readability.</p>
+            </div>
+            <div class="feature-card">
+                <h3><i class="fas fa-shield-alt" style="color: var(--primary);"></i> Secure & Sandboxed</h3>
+                <p>Your code runs in a securely sandboxed iframe to prevent malicious scripts from affecting the page. Experiment freely and safely.</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>HTML Prettify © 2025 | A Modern Tool for Web Developers</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const htmlEditor = document.getElementById('htmlEditor');
+            const previewFrame = document.getElementById('previewFrame');
+            const runBtn = document.getElementById('runBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const formatBtn = document.getElementById('formatBtn');
+            const exampleBtn = document.getElementById('exampleBtn');
+            const minifyBtn = document.getElementById('minifyBtn');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const lineCountEl = document.getElementById('lineCount');
+            const previewContainer = document.querySelector('.preview-container');
+
+            const exampleCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sample Page</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif;
+            background: #f0f2f5; 
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #4361ee;
+            margin-bottom: 1rem;
+        }
+        p {
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Welcome!</h1>
+        <p>This is a live preview of your HTML code.</p>
+    </div>
+</body>
+</html>`;
+
+            // --- Core Functions ---
+
+            const updatePreview = () => {
+                const htmlCode = htmlEditor.value;
+                // Using srcdoc is more secure and efficient than writing to the document
+                previewFrame.srcdoc = htmlCode;
+            };
+
+            const updateLineCount = () => {
+                lineCountEl.textContent = htmlEditor.value.split('\n').length;
+            };
+
+            const animateButton = (btn) => {
+                btn.classList.add('btn-animate');
+                setTimeout(() => btn.classList.remove('btn-animate'), 300);
+            };
+            
+            // --- Event Handlers ---
+
+            // Run / Auto-update
+            htmlEditor.addEventListener('input', () => {
+                updatePreview();
+                updateLineCount();
+            });
+
+            runBtn.addEventListener('click', () => {
+                animateButton(runBtn);
+                updatePreview();
+            });
+
+            // Format Code
+            formatBtn.addEventListener('click', () => {
+                animateButton(formatBtn);
+                if (htmlEditor.value.trim()) {
+                    htmlEditor.value = html_beautify(htmlEditor.value, {
+                        indent_size: 4,
+                        space_in_empty_paren: true
+                    });
+                    updateLineCount();
+                }
+            });
+
+            // Clear Editor
+            clearBtn.addEventListener('click', () => {
+                animateButton(clearBtn);
+                if (confirm('Are you sure you want to clear the editor?')) {
+                    htmlEditor.value = '';
+                    updatePreview();
+                    updateLineCount();
+                }
+            });
+
+            // Load Example
+            exampleBtn.addEventListener('click', () => {
+                animateButton(exampleBtn);
+                htmlEditor.value = exampleCode;
+                updatePreview();
+                updateLineCount();
+            });
+
+            // Minify HTML
+            minifyBtn.addEventListener('click', () => {
+                animateButton(minifyBtn);
+                if (htmlEditor.value.trim()) {
+                    const minified = htmlEditor.value
+                        .replace(/<!--[\s\S]*?-->/g, '') // remove comments
+                        .replace(/>\s+</g, '><')       // remove whitespace between tags
+                        .replace(/\s{2,}/g, ' ')        // remove multiple spaces
+                        .replace(/\n/g, '')             // remove newlines
+                        .trim();
+                    htmlEditor.value = minified;
+                    updateLineCount();
+                }
+            });
+            
+            // Fullscreen
+            fullscreenBtn.addEventListener('click', () => {
+                animateButton(fullscreenBtn);
+                if (!document.fullscreenElement) {
+                    previewContainer.requestFullscreen().catch(err => {
+                        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                if (document.fullscreenElement === previewContainer) {
+                    fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> <span>Exit</span>';
+                } else {
+                    fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i> <span>Fullscreen</span>';
+                }
+            });
+
+            // Keyboard Shortcuts
+            htmlEditor.addEventListener('keydown', (e) => {
+                // Ctrl + Enter to Run
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    runBtn.click();
+                }
+                // Ctrl + Shift + F to Format
+                if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
+                    e.preventDefault();
+                    formatBtn.click();
+                }
+            });
+            
+            // --- Initial Load ---
+            htmlEditor.value = exampleCode;
+            updatePreview();
+            updateLineCount();
+        });
+    </script>
+</body>
+</html>
